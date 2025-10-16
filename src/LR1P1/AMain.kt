@@ -31,8 +31,8 @@ class AMain: Agent() {
             e.printStackTrace()
         }
 
-        for (i in 0..4) {
-            val agentId = agents[i]!!.name
+        for (agent in agents) {
+            val agentId = agent!!.name
             val msg = ACLMessage(ACLMessage.INFORM)
             msg.addReceiver(agentId)
             msg.language = "English"
