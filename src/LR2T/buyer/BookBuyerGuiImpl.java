@@ -75,7 +75,7 @@ public class BookBuyerGuiImpl extends JFrame implements BookBuyerGui {
         desiredCostTF = new JTextField(64);
         desiredCostTF.setMinimumSize(new Dimension(70, 20));
         desiredCostTF.setPreferredSize(new Dimension(70, 20));
-        desiredCostTF.setEditable(false); //FIXME just for this example
+        desiredCostTF.setEditable(true); //FIXME just for this example
         gridBagConstraints = new GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 1;
