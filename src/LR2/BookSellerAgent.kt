@@ -13,22 +13,12 @@ import java.util.Hashtable
 
 
 class BookSellerAgent : Agent() {
-    // The catalogue of books for sale (maps the title of a book to its price)
     private var catalogue: Hashtable<Any?, Any?>? = null
-
-    // The GUI by means of which the user can add books in the catalogue
     private var myGui: BookSellerGui? = null
-
-    // Put agent initializations here
     override fun setup() {
-        // Create the catalogue
         catalogue = Hashtable<Any?, Any?>()
-
-        // Create and show the GUI
         myGui = BookSellerGui(this)
         myGui!!.show()
-
-        // Register the book-selling service in the yellow pages
         val dfd = DFAgentDescription()
         dfd.name = aid
         val sd = ServiceDescription()
@@ -40,26 +30,17 @@ class BookSellerAgent : Agent() {
         } catch (fe: FIPAException) {
             fe.printStackTrace()
         }
-
-
-        // Add the behaviour serving queries from buyer agents
         addBehaviour(OfferRequestsServer())
-
-        // Add the behaviour serving purchase orders from buyer agents
         addBehaviour(PurchaseOrdersServer())
     }
 
-    // Put agent clean-up operations here
     override fun takeDown() {
-        // Deregister from the yellow pages
         try {
             DFService.deregister(this)
         } catch (fe: FIPAException) {
             fe.printStackTrace()
         }
-        // Close the GUI
         myGui!!.dispose()
-        // Printout a dismissal message
         println("Seller-agent " + aid.name + " terminating.")
     }
 
@@ -88,17 +69,14 @@ class BookSellerAgent : Agent() {
             val mt = MessageTemplate.MatchPerformative(ACLMessage.CFP)
             val msg = myAgent.receive(mt)
             if (msg != null) {
-                // CFP Message received. Process it
                 val title = msg.content
                 val reply = msg.createReply()
 
                 val price = catalogue!!.get(title) as Int?
                 if (price != null) {
-                    // The requested book is available for sale. Reply with the price
                     reply.performative = ACLMessage.PROPOSE
                     reply.content = price.toString()
                 } else {
-                    // The requested book is NOT available for sale.
                     reply.performative = ACLMessage.REFUSE
                     reply.content = "not-available"
                 }
@@ -107,7 +85,7 @@ class BookSellerAgent : Agent() {
                 block()
             }
         }
-    } // End of inner class OfferRequestsServer
+    }
 
 
     /**
@@ -141,5 +119,5 @@ class BookSellerAgent : Agent() {
                 block()
             }
         }
-    } // End of inner class OfferRequestsServer
+    }
 }
