@@ -1,4 +1,4 @@
-package LR2
+package iz
 
 import java.awt.BorderLayout
 import java.awt.Dimension
@@ -13,8 +13,7 @@ import javax.swing.JOptionPane
 import javax.swing.JPanel
 import javax.swing.JTextField
 
-
-public class BookSellerGui(private val myAgent: BookSellerAgent) : JFrame(myAgent.getLocalName()) {
+class ProjectManagerGui(private val agent: ProjectManagerAgent) : JFrame(agent.localName) {
     private val titleField: JTextField
     private val priceField: JTextField
 
@@ -34,12 +33,11 @@ public class BookSellerGui(private val myAgent: BookSellerAgent) : JFrame(myAgen
             try {
                 val title = titleField.getText().trim { it <= ' ' }
                 val price = priceField.getText().trim { it <= ' ' }
-                myAgent.updateCatalogue(title, price.toInt())
                 titleField.text = ""
                 priceField.text = ""
             } catch (e: Exception) {
                 JOptionPane.showMessageDialog(
-                    this@BookSellerGui,
+                    this@ProjectManagerGui,
                     "Invalid values. " + e.message,
                     "Error",
                     JOptionPane.ERROR_MESSAGE
@@ -52,13 +50,12 @@ public class BookSellerGui(private val myAgent: BookSellerAgent) : JFrame(myAgen
 
         addWindowListener(object : WindowAdapter() {
             override fun windowClosing(e: WindowEvent?) {
-                myAgent.doDelete()
+                agent.doDelete()
             }
         })
 
         setResizable(false)
     }
-
     override fun show() {
         pack()
         val screenSize: Dimension = Toolkit.getDefaultToolkit().screenSize
