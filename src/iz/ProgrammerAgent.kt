@@ -85,9 +85,11 @@ class ProgrammerAgent : Agent() {
                         if (reply.performative == ACLMessage.PROPOSE) {
                             try {
                                 val cost = reply.content.toInt()
+                                println("COST:$cost")
                                 if (cost > bestCost) {
                                     bestCost = cost
                                     bestProject = reply.sender
+                                    println("BestProject:$bestProject with best cost:$bestCost")
                                 }
                             } catch (e: Exception) {}
                         }
@@ -102,7 +104,6 @@ class ProgrammerAgent : Agent() {
                     if (bestProject != null) {
                         val order = ACLMessage(ACLMessage.ACCEPT_PROPOSAL)
                         order.addReceiver(bestProject)
-                        // optionally include programmer info (name/experience)
                         order.content = experience.toString()
                         order.conversationId = "project-allocation"
                         order.replyWith = "order" + System.currentTimeMillis()
@@ -125,7 +126,6 @@ class ProgrammerAgent : Agent() {
                     if (reply != null) {
                         if (reply.performative == ACLMessage.INFORM) {
                             println("${localName}: successfully assigned to project ${reply.sender.name}. Project cost = $bestCost")
-                            // programmer can stop (one project only)
                             myAgent.doDelete()
                         } else {
                             println("${localName}: assignment failed by ${reply.sender.name}: ${reply.content}")

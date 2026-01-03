@@ -62,6 +62,7 @@ class ProjectAgent : Agent() {
         override fun action() {
             val mt = MessageTemplate.MatchPerformative(ACLMessage.CFP)
             val msg = myAgent.receive(mt)
+            println("Project receiving message:$msg")
             if (msg!=null) {
                 val reply = msg.createReply()
                 try {
@@ -77,6 +78,7 @@ class ProjectAgent : Agent() {
                     reply.performative = ACLMessage.REFUSE
                     reply.content = "Bad request"
                 }
+                println("Sending reply: $reply")
                 myAgent.send(reply)
             } else block()
         }
