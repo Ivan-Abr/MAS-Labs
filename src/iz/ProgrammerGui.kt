@@ -1,4 +1,0 @@
-package iz
-
-class ProgrammerGui {
-}

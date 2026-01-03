@@ -1,4 +1,4 @@
-package iz
+package iz.projects
 
 import jade.core.Agent
 import jade.core.behaviours.CyclicBehaviour

@@ -1,4 +1,4 @@
-package iz
+package iz.programmers
 
 import jade.core.AID
 import jade.core.Agent
