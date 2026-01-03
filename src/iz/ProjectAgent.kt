@@ -69,6 +69,7 @@ class ProjectAgent : Agent() {
                     val progExp = msg.content.toInt()
                     val slots = requiredProgrammers.get()
                     if (progExp >= requiredExp && slots > 0) {
+                        reply.performative = ACLMessage.PROPOSE
                         reply.content = cost.toString()
                     } else {
                         reply.performative = ACLMessage.REFUSE
