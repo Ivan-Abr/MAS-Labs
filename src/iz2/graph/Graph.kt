@@ -70,8 +70,8 @@ class Graph {
         idCounter.set(1)
     }
 
-    fun shortestPathBFS(start: Int, end: Int): List<Int> {
-        if (!vertices.containsKey(start) || !vertices.containsKey(end)) return emptyList()
+    fun shortestPathBFS(start: Int, end: Int): Pair<List<Int>, Double> {
+        if (!vertices.containsKey(start) || !vertices.containsKey(end)) return Pair(emptyList(), 0.0)
         val q: Queue<Int> = LinkedList()
         val parent = mutableMapOf<Int, Int?>()
         q.add(start)
@@ -87,20 +87,21 @@ class Graph {
                 }
             }
         }
-        if (!parent.containsKey(end)) return emptyList()
+        if (!parent.containsKey(end)) return Pair(emptyList(), 0.0)
         val path = mutableListOf<Int>()
         var cur: Int? = end
         while (cur!=null) {
             path.add(cur)
             cur = parent[cur]
         }
-        return path.reversed()
+        return Pair(path.reversed(), path.size.toDouble())
     }
 
-    fun shortestPathDijkstra(start: Int, end: Int): List<Int> {
-        if (!vertices.containsKey(start) || !vertices.containsKey(end)) return emptyList()
+    fun shortestPathDijkstra(start: Int, end: Int): Pair<List<Int>, Double> {
+        if (!vertices.containsKey(start) || !vertices.containsKey(end)) return Pair(emptyList(), 0.0)
         val dist = mutableMapOf<Int, Double>()
         val prev = mutableMapOf<Int, Int?>()
+        var sumWeight = 0.0
         val pq = PriorityQueue(compareBy<Pair<Int, Double>> { it.second })
         for (v in vertices.keys) { dist[v] = Double.POSITIVE_INFINITY; prev[v] = null }
         dist[start] = 0.0
@@ -112,16 +113,17 @@ class Graph {
             for ((v, w) in adj[u].orEmpty()) {
                 val alt = dist[u]!! + w
                 if (alt < dist[v]!!) {
+                    sumWeight += dist[v]!!
                     dist[v] = alt
                     prev[v] = u
                     pq.add(v to alt)
                 }
             }
         }
-        if (dist[end] == Double.POSITIVE_INFINITY) return emptyList()
+        if (dist[end] == Double.POSITIVE_INFINITY) return Pair(emptyList(), 0.0)
         val path = mutableListOf<Int>()
         var cur: Int? = end
         while (cur != null) { path.add(cur); cur = prev[cur] }
-        return path.reversed()
+        return Pair(path.reversed(), dist[end]?: 0.0)
     }
 }

@@ -46,7 +46,7 @@ class GraphFrame(val graph: Graph) : JFrame("Kotlin Graph Editor + Visualization
         findUnweighted.addActionListener {
             val s = startField.text.toIntOrNull(); val t = endField.text.toIntOrNull()
             if (s == null || t == null) { JOptionPane.showMessageDialog(this, "Введите корректные id вершин") ; return@addActionListener }
-            val path = graph.shortestPathBFS(s, t)
+            val path = graph.shortestPathBFS(s, t).first
             panel.highlightedPath = path
             panel.repaint()
             if (path.isEmpty()) JOptionPane.showMessageDialog(this, "Путь не найден")
@@ -56,7 +56,7 @@ class GraphFrame(val graph: Graph) : JFrame("Kotlin Graph Editor + Visualization
         findWeighted.addActionListener {
             val s = startField.text.toIntOrNull(); val t = endField.text.toIntOrNull()
             if (s == null || t == null) { JOptionPane.showMessageDialog(this, "Введите корректные id вершин") ; return@addActionListener }
-            val path = graph.shortestPathDijkstra(s, t)
+            val path = graph.shortestPathDijkstra(s, t).first
             panel.highlightedPath = path
             panel.repaint()
             if (path.isEmpty()) JOptionPane.showMessageDialog(this, "Путь не найден")
