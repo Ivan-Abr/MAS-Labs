@@ -22,7 +22,7 @@ fun startJadeMainContainer(graph: Graph) {
         val taxi1 = container.createNewAgent(
             "taxi1",
             TaxiAgent::class.java.name,
-            arrayOf<Any?>(graph, 1, 1000.0)
+            arrayOf<Any?>(graph, 1, 3000.0)
         )
         val client1 = container.createNewAgent("client1",
             ClientAgent::class.java.name,

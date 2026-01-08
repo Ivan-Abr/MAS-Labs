@@ -1,5 +1,6 @@
 package iz2.graph
 
+import java.util.Collections
 import java.util.LinkedList
 import java.util.PriorityQueue
 import java.util.Queue
@@ -32,6 +33,20 @@ class Graph {
         } else {
             SwingUtilities.invokeLater(r)
         }
+    }
+
+    private val logs = Collections.synchronizedList(mutableListOf<String>())
+    fun addLog(message: String) {
+        val ts = java.time.LocalTime.now().withNano(0).toString()
+        logs.add("[$ts] $message")
+        if (logs.size > 2000) {
+            while (logs.size > 2000) logs.removeAt(0)
+        }
+        notifyChange()
+    }
+
+    fun getLogsSnapshot(): List<String> {
+        return synchronized(logs) { ArrayList(logs) }
     }
 
     fun addVertex(customId: Int? = null,

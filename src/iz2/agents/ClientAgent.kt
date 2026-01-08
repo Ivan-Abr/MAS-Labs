@@ -45,7 +45,7 @@ class ClientAgent : Agent() {
                 req.addReceiver(coordinatorAID)
                 req.content = "request;${this@ClientAgent.name};$start;$dest"
                 this@ClientAgent.send(req)
-                println("${this@ClientAgent.name}: request sent (start=$start dest=$dest)")
+                agentLog("${this@ClientAgent.name}: request sent (start=$start dest=$dest)")
             }
 
 
@@ -57,7 +57,7 @@ class ClientAgent : Agent() {
 
                 when {
                     msg.performative == ACLMessage.REFUSE -> {
-                        println("${this@ClientAgent.name}: coordinator refused - no taxi available")
+                        agentLog("${this@ClientAgent.name}: coordinator refused - no taxi available")
                         try { Thread.sleep(1000) }
                         catch (e: InterruptedException) {
                             e.printStackTrace()
@@ -75,12 +75,12 @@ class ClientAgent : Agent() {
                         val parts = msg.content.split(";")
                         val assignedTaxi = parts.getOrNull(1)
                         val dist = parts.getOrNull(3)
-                        println("${this@ClientAgent.name}: assigned taxi $assignedTaxi (dist=$dist)")
+                        agentLog("${this@ClientAgent.name}: assigned taxi $assignedTaxi (dist=$dist)")
                     }
 
 
                     msg.performative == ACLMessage.INFORM && msg.content.startsWith("arrived;") -> {
-                        println("${this@ClientAgent.name}: taxi arrived -> terminating client")
+                        agentLog("${this@ClientAgent.name}: taxi arrived -> terminating client")
                         finished = true
                         this@ClientAgent.doDelete()
                     }
@@ -94,7 +94,7 @@ class ClientAgent : Agent() {
 
 
     override fun takeDown() {
-        println("${'$'}{myAgent.name}: takeDown() called, cleaning up client agent.")
+        agentLog("${'$'}{myAgent.name}: takeDown() called, cleaning up client agent.")
 // remove from graph state and notify coordinator
         graph?.let { g ->
             synchronized(g) {
@@ -108,5 +108,10 @@ class ClientAgent : Agent() {
             msg.content = "client_done;${this@ClientAgent.name}"
             this@ClientAgent.send(msg)
         }
+    }
+
+    private fun agentLog(msg: String) {
+        graph?.addLog(msg)
+        println(msg)
     }
 }

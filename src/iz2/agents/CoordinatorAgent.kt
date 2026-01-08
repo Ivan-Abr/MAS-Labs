@@ -44,7 +44,7 @@ class CoordinatorAgent : Agent() {
                                 g.notifyChange()
                             }
                         }
-                        println("Coordinator: registered taxi ${sender.name} at $loc t = $time")
+                        agentLog("Coordinator: registered taxi ${sender.name} at $loc t = $time")
                     }
                     "update" -> {
                         val loc = parts.getOrNull(1)?.toIntOrNull()
@@ -77,7 +77,7 @@ class CoordinatorAgent : Agent() {
                                 g.notifyChange()
                             }
                         }
-                        println("Coordinator: taxi ${sender.name} done, now at ${taxis[sender]}")
+                        agentLog("Coordinator: taxi ${sender.name} done, now at ${taxis[sender]}")
                     }
                 }
             }
@@ -140,9 +140,14 @@ class CoordinatorAgent : Agent() {
                 myAgent.send(reply)
 
 
-                println("Coordinator: assigned ${bestTaxi.name} to client ${msg.sender.name}, dist=$bestDist")
+                agentLog("Coordinator: assigned ${bestTaxi.name} to client ${msg.sender.name}, dist=$bestDist")
             }
         }
         )
+    }
+
+    private fun agentLog(msg: String) {
+        graph?.addLog(msg)
+        println(msg)
     }
 }

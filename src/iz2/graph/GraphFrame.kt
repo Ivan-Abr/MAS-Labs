@@ -1,6 +1,7 @@
 package iz2.graph
 
 import java.awt.BorderLayout
+import java.awt.Dimension
 import java.awt.FlowLayout
 import java.awt.GridLayout
 import javax.swing.JButton
@@ -8,6 +9,8 @@ import javax.swing.JFrame
 import javax.swing.JLabel
 import javax.swing.JOptionPane
 import javax.swing.JPanel
+import javax.swing.JScrollPane
+import javax.swing.JTextArea
 import javax.swing.JTextField
 
 class GraphFrame(val graph: Graph) : JFrame("Kotlin Graph Editor + Visualization") {
@@ -18,6 +21,14 @@ class GraphFrame(val graph: Graph) : JFrame("Kotlin Graph Editor + Visualization
         layout = BorderLayout()
         add(panel, BorderLayout.CENTER)
 
+
+        val logArea = JTextArea()
+        logArea.isEditable = false
+        logArea.lineWrap = true
+        logArea.wrapStyleWord = true
+        val logScroll = JScrollPane(logArea)
+        logScroll.preferredSize = Dimension(320, 600)
+        add(logScroll, BorderLayout.EAST)
 
 // Bottom controls
         val bottom = JPanel()
@@ -117,7 +128,19 @@ class GraphFrame(val graph: Graph) : JFrame("Kotlin Graph Editor + Visualization
             graph.clear(); panel.highlightedPath = emptyList(); panel.repaint()
         }
 
-
+        graph.addChangeListener {
+            val logs = graph.getLogsSnapshot()
+            val text = logs.joinToString("\n")
+                if (javax.swing.SwingUtilities.isEventDispatchThread()) {
+                    logArea.text = text
+                    logArea.caretPosition = text.length
+                } else {
+                    javax.swing.SwingUtilities.invokeLater {
+                        logArea.text = text
+                        logArea.caretPosition = text.length
+                    }
+                }
+        }
         pack()
         setLocationRelativeTo(null)
         isVisible = true
