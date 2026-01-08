@@ -82,8 +82,7 @@ class CoordinatorAgent : Agent() {
                 }
             }
 
-            private fun handleRequest(msg: jade.lang.acl.ACLMessage) {
-// Клиент отправляет REQUEST с содержимым: "request;clientAID;start;dest"
+            private fun handleRequest(msg: ACLMessage) {
                 val parts = msg.content.split(";")
                 if (parts.size < 4) return
                 val clientAID = parts[1]
@@ -117,7 +116,7 @@ class CoordinatorAgent : Agent() {
 
                 if (bestTaxi == null) {
                     val reply = msg.createReply()
-                    reply.performative = jade.lang.acl.ACLMessage.REFUSE
+                    reply.performative = ACLMessage.REFUSE
                     reply.content = "no_taxi"
                     myAgent.send(reply)
                     return
@@ -136,7 +135,7 @@ class CoordinatorAgent : Agent() {
                     }
                 }
                 val reply = msg.createReply()
-                reply.performative = jade.lang.acl.ACLMessage.INFORM
+                reply.performative = ACLMessage.INFORM
                 reply.content = "assigned;${bestTaxi.name};distance;$bestDist"
                 myAgent.send(reply)
 

@@ -20,7 +20,6 @@ class Graph {
     val clientStates = mutableMapOf<String, ClientState>()
 
     private val listeners = mutableListOf<()-> Unit>()
-    fun addChangeListener(listener: () -> Unit) {listeners.add(listener)}
     fun notifyChange() {
         for (l in listeners) {
             try {

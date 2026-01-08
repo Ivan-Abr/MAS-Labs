@@ -65,7 +65,7 @@ class TaxiAgent : Agent() {
                             st.available = false
                             g.notifyChange()
                         }
-                        val upd = jade.lang.acl.ACLMessage(jade.lang.acl.ACLMessage.INFORM)
+                        val upd = ACLMessage(ACLMessage.INFORM)
                         upd.addReceiver(coordinatorAID)
                         upd.content = "update;$location;false"
                         this@TaxiAgent.send(upd)
@@ -97,7 +97,7 @@ class TaxiAgent : Agent() {
                             g.clientStates[clientAIDname]?.location = location
                             g.notifyChange()
                         }
-                        val upd2 = jade.lang.acl.ACLMessage(jade.lang.acl.ACLMessage.INFORM)
+                        val upd2 = ACLMessage(ACLMessage.INFORM)
                         upd2.addReceiver(coordinatorAID)
                         upd2.content = "update;$location;false"
                         this@TaxiAgent.send(upd2)
@@ -114,14 +114,14 @@ class TaxiAgent : Agent() {
                     }
 
 
-                    val done = jade.lang.acl.ACLMessage(jade.lang.acl.ACLMessage.INFORM)
+                    val done = ACLMessage(ACLMessage.INFORM)
                     done.addReceiver(coordinatorAID)
                     done.content = "done;$location"
                     this@TaxiAgent.send(done)
 
 
-                    val clientAID = jade.core.AID(clientAIDname, jade.core.AID.ISLOCALNAME)
-                    val fin = jade.lang.acl.ACLMessage(jade.lang.acl.ACLMessage.INFORM)
+                    val clientAID = AID(clientAIDname, AID.ISLOCALNAME)
+                    val fin = ACLMessage(ACLMessage.INFORM)
                     fin.addReceiver(clientAID)
                     fin.content = "arrived;${this@TaxiAgent.name}"
                     this@TaxiAgent.send(fin)

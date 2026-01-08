@@ -7,14 +7,12 @@ import iz2.graph.Graph
 import iz2.graph.GraphFrame
 import javax.swing.SwingUtilities
 
-class Main
 fun startJadeMainContainer(graph: Graph) {
     try {
         val rt = jade.core.Runtime.instance()
         val p = jade.core.ProfileImpl()
         p.setParameter(jade.core.Profile.MAIN_HOST, "127.0.0.1")
         val container = rt.createMainContainer(p)
-// create a trivial agent just to show JADE is running (no GUI integration required here)
         val ac = container.createNewAgent("graphAgent", "jade.core.Agent", arrayOf<Any>())
         val coordinator = container.createNewAgent(
             "coordinator",
@@ -40,9 +38,7 @@ fun startJadeMainContainer(graph: Graph) {
 }
 
 
-// Entry point
 fun main() {
-// start JADE in background thread, so Swing EDT isn't blocked
     val graph = Graph()
     SwingUtilities.invokeLater {
 
