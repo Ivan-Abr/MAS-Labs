@@ -38,6 +38,12 @@ class CoordinatorAgent : Agent() {
                         val loc = parts.getOrNull(1)?.toIntOrNull() ?: 0
                         val time = parts.getOrNull(2)?.toDoubleOrNull() ?: 1.0
                         taxis[sender] = TaxiInfo(loc, true, time)
+                        graph?.let { g ->
+                            synchronized(g) {
+                                g.taxiStates[sender.name] = Graph.TaxiState(loc, true, false, time)
+                                g.notifyChange()
+                            }
+                        }
                         println("Coordinator: registered taxi ${sender.name} at $loc t = $time")
                     }
                     "update" -> {
@@ -47,12 +53,29 @@ class CoordinatorAgent : Agent() {
                             if (loc != null) it.location = loc
                             if (avail != null) it.available = avail
                         }
+                        graph?.let { g ->
+                            synchronized(g) {
+                                val st = g.taxiStates.getOrPut(sender.name) { Graph.TaxiState(0, true, false, 1.0) }
+                                if (loc != null) st.location = loc
+                                if (avail != null) st.available = avail
+                                g.notifyChange()
+                            }
+                        }
                     }
                     "done" -> {
                         val loc = parts.getOrNull(1)?.toIntOrNull()
                         taxis[sender]?.let {
                             if (loc != null) it.location = loc
                             it.available = true
+                        }
+                        graph?.let { g ->
+                            synchronized(g) {
+                                val st = g.taxiStates.getOrPut(sender.name) { Graph.TaxiState(0, true, false, 1.0) }
+                                if (loc != null) st.location = loc
+                                st.available = true
+                                st.withClient = false
+                                g.notifyChange()
+                            }
                         }
                         println("Coordinator: taxi ${sender.name} done, now at ${taxis[sender]}")
                     }
@@ -67,20 +90,21 @@ class CoordinatorAgent : Agent() {
                 val start = parts[2].toIntOrNull() ?: return
                 val dest = parts[3].toIntOrNull() ?: return
 
-
-// Находим ближайшее доступное такси (по суммарному весу пути до клиента)
-                var bestTaxi: jade.core.AID? = null
+                graph?.let { g ->
+                    synchronized(g) {
+                        g.clientStates[clientAID] = Graph.ClientState(start, false)
+                        g.notifyChange()
+                    }
+                }
+                var bestTaxi: AID? = null
                 var bestDist = Double.POSITIVE_INFINITY
                 var bestPath: List<Int> = emptyList()
 
-
                 val g = graph ?: return
-
 
                 synchronized(g) {
                     for ((aid, info) in taxis) {
                         if (!info.available) continue
-// compute shortest path from taxi location to client start
                         val (path, total) = g.shortestPathDijkstra(info.location, start)
                         if (path.isNotEmpty() && total < bestDist) {
                             bestDist = total
@@ -92,7 +116,6 @@ class CoordinatorAgent : Agent() {
 
 
                 if (bestTaxi == null) {
-// никто не свободен — ответ клиенту отказом
                     val reply = msg.createReply()
                     reply.performative = jade.lang.acl.ACLMessage.REFUSE
                     reply.content = "no_taxi"
@@ -100,19 +123,18 @@ class CoordinatorAgent : Agent() {
                     return
                 }
 
-
-// Назначаем задачу такси: отправляем ASSIGN сообщение
-                val assign = jade.lang.acl.ACLMessage(jade.lang.acl.ACLMessage.REQUEST)
+                val assign = ACLMessage(ACLMessage.REQUEST)
                 assign.addReceiver(bestTaxi)
                 assign.content = "assign;${msg.sender.name};$start;$dest"
                 myAgent.send(assign)
 
-
-// отмечаем такси как занятое
                 taxis[bestTaxi]?.available = false
-
-
-// информируем клиента, кому назначено
+                graph?.let { gg ->
+                    synchronized(gg) {
+                        gg.taxiStates[bestTaxi.name]?.available = false
+                        gg.notifyChange()
+                    }
+                }
                 val reply = msg.createReply()
                 reply.performative = jade.lang.acl.ACLMessage.INFORM
                 reply.content = "assigned;${bestTaxi.name};distance;$bestDist"

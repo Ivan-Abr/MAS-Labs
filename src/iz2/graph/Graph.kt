@@ -4,12 +4,30 @@ import java.util.LinkedList
 import java.util.PriorityQueue
 import java.util.Queue
 import java.util.concurrent.atomic.AtomicInteger
+import javax.swing.SwingUtilities
 
 class Graph {
     private val idCounter = AtomicInteger(1)
     val vertices = mutableMapOf<Int, Vertex>()
     val edges = mutableListOf<Edge>()
     private val adj = mutableMapOf<Int, MutableList<Pair<Int, Double>>>()
+
+
+    data class TaxiState(var location: Int, var available: Boolean, var withClient: Boolean = false, var timePerWeight: Double = 1.0)
+    data class ClientState(var location: Int, var inTaxi: Boolean = false)
+
+    val taxiStates = mutableMapOf<String, TaxiState>()
+    val clientStates = mutableMapOf<String, ClientState>()
+
+    private val listeners = mutableListOf<()-> Unit>()
+    fun addChangeListener(listener: () -> Unit) {listeners.add(listener)}
+    fun notifyChange() {
+        for (l in listeners) {
+            try {
+                SwingUtilities.invokeLater { l() }
+            } catch (e: Exception) {e.printStackTrace()}
+        }
+    }
 
     fun addVertex(customId: Int? = null,
                   x: Int,
@@ -32,6 +50,15 @@ class Graph {
             val e = edgeIterator.next()
             if (id == e.from || id == e.to) edgeIterator.remove()
         }
+        for (list in adj.values) {
+            val it = list.iterator()
+            while (it.hasNext()) {
+                if (it.next().first == id) it.remove()
+            }
+        }
+        taxiStates.entries.removeIf { it.value.location == id }
+        clientStates.entries.removeIf { it.value.location == id }
+        notifyChange()
     }
 
     fun addEdge(a: Int, b: Int, weight: Double = 1.0) {
@@ -61,6 +88,7 @@ class Graph {
         }
         adj[a]?.removeIf { it.first == b }
         adj[b]?.removeIf { it.first == a }
+        notifyChange()
     }
 
     fun clear() {
@@ -68,6 +96,7 @@ class Graph {
         edges.clear()
         adj.clear()
         idCounter.set(1)
+        notifyChange()
     }
 
     fun shortestPathBFS(start: Int, end: Int): Pair<List<Int>, Double> {
@@ -125,5 +154,12 @@ class Graph {
         var cur: Int? = end
         while (cur != null) { path.add(cur); cur = prev[cur] }
         return Pair(path.reversed(), dist[end]?: 0.0)
+    }
+
+    fun edgeWeight(a: Int, b: Int): Double? {
+        return adj[a]?.firstOrNull { it.first == b }?.second
+                ?: edges.firstOrNull {
+                    (it.from == a && it.to == b) || (it.from == b && it.to == a)
+                }?.weight
     }
 }

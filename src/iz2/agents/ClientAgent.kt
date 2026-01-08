@@ -1,65 +1,112 @@
 package iz2.agents
 
 import iz2.graph.Graph
+import jade.core.AID
 import jade.core.Agent
-import jade.domain.DFService
-import jade.domain.FIPAAgentManagement.DFAgentDescription
-import jade.domain.FIPAAgentManagement.ServiceDescription
-import jade.domain.FIPAException
-import jade.domain.df
+import jade.core.behaviours.Behaviour
+import jade.lang.acl.ACLMessage
 
-class ClientAgent : jade.core.Agent() {
-    private var coordinatorAID: jade.core.AID? = null
+class ClientAgent : Agent() {
+    private var coordinatorAID: AID? = null
     private var graph: Graph? = null
+    private var start: Int = 0
+    private var dest: Int = 0
+
+
     override fun setup() {
         val args = arguments
         if (args != null && args.isNotEmpty()) {
             if (args[0] is Graph) graph = args[0] as Graph
         }
-        coordinatorAID = jade.core.AID("coordinator", jade.core.AID.ISLOCALNAME)
+        coordinatorAID = AID("coordinator", AID.ISLOCALNAME)
 
 
-        addBehaviour(object : jade.core.behaviours.OneShotBehaviour(this@ClientAgent) {
-            override fun action() {
-// Аргументы: start, dest
-                val a = arguments ?: return
-                if (a.size < 3) return
-                val start = (a[1] as? Int) ?: return
-                val dest = (a[2] as? Int) ?: return
+        addBehaviour(object : Behaviour() {
+            private var finished = false
 
 
-// Отправляем запрос координатору
-                val req = jade.lang.acl.ACLMessage(jade.lang.acl.ACLMessage.REQUEST)
-                req.addReceiver(coordinatorAID)
-                req.content = "request;${myAgent.name};$start;$dest"
-                send(req)
+            override fun onStart() {
+                val a = arguments ?: run { finished = true; return }
+                if (a.size < 3) { finished = true; return }
+                start = (a[1] as? Int) ?: run { finished = true; return }
+                dest = (a[2] as? Int) ?: run { finished = true; return }
 
 
-// ждём ответа от координатора об назначении
-                var assignedTaxi: String? = null
-                while (true) {
-                    val msg = blockingReceive(10000)
-                    if (msg == null) {
-                        println("${myAgent.name}: timeout waiting for assignment")
-                        break
-                    }
-                    if (msg.performative == jade.lang.acl.ACLMessage.INFORM && msg.content.startsWith("assigned;")) {
-                        val parts = msg.content.split(";")
-                        assignedTaxi = parts.getOrNull(1)
-                        println("${myAgent.name}: assigned taxi $assignedTaxi")
-// теперь ждём сообщение от такси о прибытии
-                    } else if (msg.performative == jade.lang.acl.ACLMessage.INFORM && msg.content.startsWith("arrived;")) {
-                        println("${myAgent.name}: my taxi ${msg.content} arrived. terminating.")
-                        break
-                    } else if (msg.performative == jade.lang.acl.ACLMessage.REFUSE) {
-                        println("${myAgent.name}: coordinator refused - no taxi available")
-                        break
+// register client position in shared graph for GUI
+                graph?.let { g ->
+                    synchronized(g) {
+                        g.clientStates[this@ClientAgent.name] = Graph.ClientState(start, false)
+                        g.notifyChange()
                     }
                 }
 
 
-                doDelete() // завершение клиента
+                val req = ACLMessage(ACLMessage.REQUEST)
+                req.addReceiver(coordinatorAID)
+                req.content = "request;${this@ClientAgent.name};$start;$dest"
+                this@ClientAgent.send(req)
+                println("${this@ClientAgent.name}: request sent (start=$start dest=$dest)")
             }
+
+
+            override fun action() {
+                if (finished) { block(); return }
+                val msg = this@ClientAgent.receive()
+                if (msg == null) { block(); return }
+
+
+                when {
+                    msg.performative == ACLMessage.REFUSE -> {
+                        println("${this@ClientAgent.name}: coordinator refused - no taxi available")
+                        try { Thread.sleep(1000) }
+                        catch (e: InterruptedException) {
+                            e.printStackTrace()
+                            finished = true
+                            this@ClientAgent.doDelete()
+                        }
+                        val retry = ACLMessage(ACLMessage.REQUEST)
+                        retry.addReceiver(coordinatorAID)
+                        retry.content = "request;${this@ClientAgent.name};$start;$dest"
+                        this@ClientAgent.send(retry)
+                    }
+
+
+                    msg.performative == ACLMessage.INFORM && msg.content.startsWith("assigned;") -> {
+                        val parts = msg.content.split(";")
+                        val assignedTaxi = parts.getOrNull(1)
+                        val dist = parts.getOrNull(3)
+                        println("${this@ClientAgent.name}: assigned taxi $assignedTaxi (dist=$dist)")
+                    }
+
+
+                    msg.performative == ACLMessage.INFORM && msg.content.startsWith("arrived;") -> {
+                        println("${this@ClientAgent.name}: taxi arrived -> terminating client")
+                        finished = true
+                        this@ClientAgent.doDelete()
+                    }
+                }
+            }
+
+
+            override fun done(): Boolean = finished
         })
+    }
+
+
+    override fun takeDown() {
+        println("${'$'}{myAgent.name}: takeDown() called, cleaning up client agent.")
+// remove from graph state and notify coordinator
+        graph?.let { g ->
+            synchronized(g) {
+                g.clientStates.remove(this@ClientAgent.name)
+                g.notifyChange()
+            }
+        }
+        coordinatorAID?.let {
+            val msg = ACLMessage(ACLMessage.INFORM)
+            msg.addReceiver(it)
+            msg.content = "client_done;${this@ClientAgent.name}"
+            this@ClientAgent.send(msg)
+        }
     }
 }

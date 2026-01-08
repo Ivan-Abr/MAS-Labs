@@ -28,7 +28,7 @@ fun startJadeMainContainer(graph: Graph) {
         )
         val client1 = container.createNewAgent("client1",
             ClientAgent::class.java.name,
-            arrayOf<Any?>(graph, 2, 3)
+            arrayOf<Any?>(graph, 2, 4)
         )
         ac.start()
         coordinator.start()
@@ -49,9 +49,11 @@ fun main() {
         val v1 = graph.addVertex(x = 100, y = 100)
         val v2 = graph.addVertex(x = 300, y =100)
         val v3 = graph.addVertex(x = 200, y = 220)
+        val v4 = graph.addVertex(x = 330, y = 250)
         graph.addEdge(v1.id, v2.id, 1.0)
         graph.addEdge(v2.id, v3.id, 1.0)
         graph.addEdge(v1.id, v3.id, 2.5)
+        graph.addEdge(v3.id, v4.id, 1.5)
         GraphFrame(graph)
     }
     Thread { startJadeMainContainer(graph) }.start()
