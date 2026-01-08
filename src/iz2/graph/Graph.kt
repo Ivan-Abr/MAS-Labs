@@ -20,11 +20,17 @@ class Graph {
     val clientStates = mutableMapOf<String, ClientState>()
 
     private val listeners = mutableListOf<()-> Unit>()
+    fun addChangeListener(listener: () -> Unit) { listeners.add(listener) }
     fun notifyChange() {
-        for (l in listeners) {
-            try {
-                SwingUtilities.invokeLater { l() }
-            } catch (e: Exception) {e.printStackTrace()}
+        val r = Runnable {
+            for (l in listeners) {
+                try { l() } catch (_: Exception) { /* ignore */ }
+            }
+        }
+        if (SwingUtilities.isEventDispatchThread()) {
+            r.run()
+        } else {
+            SwingUtilities.invokeLater(r)
         }
     }
 

@@ -26,6 +26,13 @@ class GraphPanel(val graph: Graph) : JPanel() {
         background = Color(240, 240, 240)
         preferredSize = Dimension(800, 600)
 
+        graph.addChangeListener {
+            if (SwingUtilities.isEventDispatchThread()) {
+                repaint()
+            } else {
+                SwingUtilities.invokeLater { repaint() }
+            }
+        }
 
         addMouseListener(object : MouseAdapter() {
             override fun mousePressed(e: MouseEvent) {
