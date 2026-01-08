@@ -163,7 +163,7 @@ class GraphFrame(val graph: Graph) : JFrame("Taxi Simulation") {
 
         removeTaxiBtn.addActionListener {
             val name = JOptionPane.showInputDialog(this, "Taxi agent name to remove", "taxi1")?.toString() ?: return@addActionListener
-            try { killAgentInContainer(name); graph.taxiStates.remove(name); graph.addLog("Requested removal of taxi agent $name") } catch (ex: Exception) { JOptionPane.showMessageDialog(this, "Failed: ${'$'}{ex.message}") }
+            try { killAgentInContainer(name); graph.taxiStates.remove(name); graph.addLog("Requested removal of taxi agent $name") } catch (ex: Exception) { JOptionPane.showMessageDialog(this, "Failed: ${ex.message}") }
         }
 
 
@@ -178,7 +178,7 @@ class GraphFrame(val graph: Graph) : JFrame("Taxi Simulation") {
 
         removeClientBtn.addActionListener {
             val name = JOptionPane.showInputDialog(this, "Client agent name to remove", "client1")?.toString() ?: return@addActionListener
-            try { killAgentInContainer(name); graph.clientStates.remove(name); graph.addLog("Requested removal of client agent $name") } catch (ex: Exception) { JOptionPane.showMessageDialog(this, "Failed: ${'$'}{ex.message}") }
+            try { killAgentInContainer(name); graph.clientStates.remove(name); graph.addLog("Requested removal of client agent $name") } catch (ex: Exception) { JOptionPane.showMessageDialog(this, "Failed: ${ex.message}") }
         }
 
         pack()

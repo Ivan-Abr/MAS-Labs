@@ -129,9 +129,4 @@ class TaxiAgent : Agent() {
             })
         }
     }
-
-    private fun agentLog(msg: String) {
-        graph?.addLog(msg)
-        println(msg)
-    }
 }
