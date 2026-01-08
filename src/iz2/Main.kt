@@ -5,7 +5,12 @@ import iz2.agents.CoordinatorAgent
 import iz2.agents.TaxiAgent
 import iz2.graph.Graph
 import iz2.graph.GraphFrame
+import java.util.Collections
 import javax.swing.SwingUtilities
+
+@Volatile
+var jadeContainer: jade.wrapper.AgentContainer? = null
+val createdAgentNames: MutableSet<String> = Collections.synchronizedSet(mutableSetOf())
 
 fun startJadeMainContainer(graph: Graph) {
     try {
@@ -13,6 +18,7 @@ fun startJadeMainContainer(graph: Graph) {
         val p = jade.core.ProfileImpl()
         p.setParameter(jade.core.Profile.MAIN_HOST, "127.0.0.1")
         val container = rt.createMainContainer(p)
+        jadeContainer = container
         val ac = container.createNewAgent("graphAgent", "jade.core.Agent", arrayOf<Any>())
         val coordinator = container.createNewAgent(
             "coordinator",
@@ -22,7 +28,7 @@ fun startJadeMainContainer(graph: Graph) {
         val taxi1 = container.createNewAgent(
             "taxi1",
             TaxiAgent::class.java.name,
-            arrayOf<Any?>(graph, 1, 3000.0)
+            arrayOf<Any?>(graph, 1, 2000.0)
         )
         val client1 = container.createNewAgent("client1",
             ClientAgent::class.java.name,
@@ -53,4 +59,30 @@ fun main() {
         GraphFrame(graph)
     }
     Thread { startJadeMainContainer(graph) }.start()
+}
+
+
+
+
+fun createAgentInContainer(name: String, className: String, args: Array<Any?> = arrayOf()) {
+    try {
+        val container = jadeContainer ?: throw IllegalStateException("JADE container not initialized")
+        val ac = container.createNewAgent(name, className, args)
+        ac.start()
+        createdAgentNames.add(name)
+    } catch (ex: Exception) {
+        println("Failed to create agent $name: ${ex.message}")
+    }
+}
+
+
+fun killAgentInContainer(name: String) {
+    try {
+        val container = jadeContainer ?: throw IllegalStateException("JADE container not initialized")
+        val controller = container.getAgent(name)
+        controller.kill()
+        createdAgentNames.remove(name)
+    } catch (ex: Exception) {
+        println("Failed to kill agent $name: ${ex.message}")
+    }
 }

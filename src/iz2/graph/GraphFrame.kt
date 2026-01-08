@@ -1,5 +1,10 @@
 package iz2.graph
 
+import iz2.agents.ClientAgent
+import iz2.agents.TaxiAgent
+import iz2.createAgentInContainer
+import iz2.createdAgentNames
+import iz2.killAgentInContainer
 import java.awt.BorderLayout
 import java.awt.Dimension
 import java.awt.FlowLayout
@@ -13,7 +18,7 @@ import javax.swing.JScrollPane
 import javax.swing.JTextArea
 import javax.swing.JTextField
 
-class GraphFrame(val graph: Graph) : JFrame("Kotlin Graph Editor + Visualization") {
+class GraphFrame(val graph: Graph) : JFrame("Taxi Simulation") {
     private val panel = GraphPanel(graph)
 
     init {
@@ -141,6 +146,41 @@ class GraphFrame(val graph: Graph) : JFrame("Kotlin Graph Editor + Visualization
                     }
                 }
         }
+
+        val addTaxiBtn = JButton("Add Taxi")
+        val removeTaxiBtn = JButton("Remove Taxi")
+        val addClientBtn = JButton("Add Client")
+        val removeClientBtn = JButton("Remove Client")
+        bottom.add(addTaxiBtn); bottom.add(removeTaxiBtn); bottom.add(addClientBtn); bottom.add(removeClientBtn)
+
+        addTaxiBtn.addActionListener {
+            val name = JOptionPane.showInputDialog(this, "Taxi agent name", "taxi${createdAgentNames.size + 1}")?.toString() ?: return@addActionListener
+            val start = JOptionPane.showInputDialog(this, "Start vertex id", "1")?.toIntOrNull() ?: 1
+            val time = JOptionPane.showInputDialog(this, "Time per weight (ms)", "1000")?.toDoubleOrNull() ?: 1000.0
+            createAgentInContainer(name, TaxiAgent::class.java.name, arrayOf<Any?>(graph, start, time))
+            graph.addLog("Requested creation of taxi agent $name")
+        }
+
+        removeTaxiBtn.addActionListener {
+            val name = JOptionPane.showInputDialog(this, "Taxi agent name to remove", "taxi1")?.toString() ?: return@addActionListener
+            try { killAgentInContainer(name); graph.taxiStates.remove(name); graph.addLog("Requested removal of taxi agent $name") } catch (ex: Exception) { JOptionPane.showMessageDialog(this, "Failed: ${'$'}{ex.message}") }
+        }
+
+
+        addClientBtn.addActionListener {
+            val name = JOptionPane.showInputDialog(this, "Client agent name", "client${createdAgentNames.size + 1}")?.toString() ?: return@addActionListener
+            val start = JOptionPane.showInputDialog(this, "Start vertex id", "1")?.toIntOrNull() ?: 1
+            val dest = JOptionPane.showInputDialog(this, "Dest vertex id", "2")?.toIntOrNull() ?: 2
+            createAgentInContainer(name, ClientAgent::class.java.name, arrayOf<Any?>(graph, start, dest))
+            graph.addLog("Requested creation of client agent $name")
+        }
+
+
+        removeClientBtn.addActionListener {
+            val name = JOptionPane.showInputDialog(this, "Client agent name to remove", "client1")?.toString() ?: return@addActionListener
+            try { killAgentInContainer(name); graph.clientStates.remove(name); graph.addLog("Requested removal of client agent $name") } catch (ex: Exception) { JOptionPane.showMessageDialog(this, "Failed: ${'$'}{ex.message}") }
+        }
+
         pack()
         setLocationRelativeTo(null)
         isVisible = true

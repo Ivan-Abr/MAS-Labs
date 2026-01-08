@@ -95,7 +95,6 @@ class ClientAgent : Agent() {
 
     override fun takeDown() {
         agentLog("${'$'}{myAgent.name}: takeDown() called, cleaning up client agent.")
-// remove from graph state and notify coordinator
         graph?.let { g ->
             synchronized(g) {
                 g.clientStates.remove(this@ClientAgent.name)
